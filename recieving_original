@@ -1,0 +1,49 @@
+#include <XBee.h>
+XBee xbee = XBee();
+XBeeResponse response = XBeeResponse();
+ZBRxResponse rx = ZBRxResponse();
+int led=13;
+
+void setup() {
+  Serial.begin(9600);
+  xbee.begin(Serial);
+}
+void loop() {
+String sample;
+  xbee.readPacket(); 
+    if (xbee.getResponse().isAvailable()) {
+      
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       
+      //Serial.println(xbee.getResponse().getApiId());
+      if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
+      
+        xbee.getResponse().getZBRxResponse(rx);
+        for (int i = 0; i < rx.getDataLength(); i++) {
+          sample += (char)rx.getData(i);
+        }
+        Serial.println(sample);
+      }
+      
+    }else if (xbee.getResponse().isError()) {
+       digitalWrite(led, HIGH);
+       delay(50);
+       digitalWrite(led, LOW);
+       delay(50);
+       digitalWrite(led, HIGH);
+       delay(50);
+       digitalWrite(led, LOW);
+       delay(50);
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       
+      Serial.println("Error reading packet.  Error code: ");  
+      Serial.println(xbee.getResponse().getErrorCode());
+  } 
+  delay(100);
+}
