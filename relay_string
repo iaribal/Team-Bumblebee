@@ -1,0 +1,136 @@
+#include <XBee.h>
+//recieve packet, forward to the coordinator
+XBee xbee = XBee();
+int led=13;
+ZBTxStatusResponse txStatus = ZBTxStatusResponse();
+XBeeResponse response = XBeeResponse();
+ZBRxResponse rx = ZBRxResponse();
+
+void setup() {
+
+  Serial.begin(9600);
+  //pinMode(led, output); //for blinking light
+  xbee.setSerial(Serial);
+
+}
+
+void loop() {
+  
+  String sample;
+  
+  xbee.readPacket(); 
+  
+  uint8_t data[rx.getDataLength()];
+         
+    if (xbee.getResponse().isAvailable()) {
+     
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       
+      Serial.println(xbee.getResponse().getApiId());
+      
+      if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
+       
+        xbee.getResponse().getZBRxResponse(rx);
+
+        for (int i = 0; i < rx.getDataLength(); i++) {
+          data[i]=(char)rx.getData(i);
+          sample += (char)rx.getData(i);
+          //Serial.println(data[1]);
+        }
+        
+        Serial.println(sample);
+        
+      }
+    }else if (xbee.getResponse().isError()) {
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       digitalWrite(led, HIGH);
+       delay(100);
+       digitalWrite(led, LOW);
+       delay(100);
+       
+      Serial.println("Error reading packet.  Error code: ");  
+      Serial.println(xbee.getResponse().getErrorCode());
+  } 
+
+        
+  delay(100);
+  
+if (xbee.getResponse().isAvailable()){
+  
+  XBeeAddress64 addr64 = XBeeAddress64(0x0013A200,0x40E95CCC); //SH and SL of the recieving xbee...something like this (0x0013A200, 0x40E95C53)
+
+  ZBTxRequest zbTx = ZBTxRequest(addr64, data, sizeof(data));
+
+  xbee.send(zbTx);
+
+  delay(2000);
+ 
+
+// getting a status response
+if (xbee.readPacket(500)) {
+    // got a response!
+
+    // should be a znet tx status              
+    if (xbee.getResponse().getApiId() == ZB_TX_STATUS_RESPONSE) {
+      xbee.getResponse().getZBTxStatusResponse(txStatus);
+
+      // get the delivery status, the fifth byte blink once
+      if (txStatus.getDeliveryStatus() == SUCCESS) {
+        digitalWrite(led, HIGH);
+        delay(100);
+        digitalWrite(led, LOW);
+        delay(100);
+        digitalWrite(led, HIGH);
+        delay(100);
+        digitalWrite(led, LOW);
+        delay(100);
+        
+      } else {
+        // the remote XBee did not receive our packet. is it powered on? blink twice
+        digitalWrite(led, HIGH);
+        delay(100);
+        digitalWrite(led, LOW);
+        delay(100);
+        digitalWrite(led, HIGH);
+        delay(100);
+        digitalWrite(led, LOW);
+        delay(100);
+        digitalWrite(led, HIGH);
+        delay(100);
+        digitalWrite(led, LOW);
+        delay(100);
+      }
+    }
+    
+    //error recieving the packet
+  } else if (xbee.getResponse().isError()) {
+      Serial.println("Error reading packet.  Error code: ");  
+      Serial.println(xbee.getResponse().getErrorCode());
+      
+    } else {
+      // local XBee did not provide a timely TX Status Response -- should not happen
+          digitalWrite(led, HIGH);
+          delay(100);
+          digitalWrite(led, LOW);
+          delay(100);
+          digitalWrite(led, HIGH);
+          delay(100);
+          digitalWrite(led, LOW);
+          delay(100);
+          digitalWrite(led, HIGH);
+          delay(100);
+          digitalWrite(led, LOW);
+          delay(100);
+      }
+ }  
+}
