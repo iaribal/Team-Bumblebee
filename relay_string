@@ -36,12 +36,11 @@ void loop() {
         xbee.getResponse().getZBRxResponse(rx);
 
         for (int i = 0; i < rx.getDataLength(); i++) {
-          data[i]=(char)rx.getData(i);
-          sample += (char)rx.getData(i);
-          //Serial.println(data[1]);
+          data[i]=(char)rx.getData(i); //puts data into new packet
+          sample += (char)rx.getData(i); //for printing to serial monitor 
         }
         
-        Serial.println(sample);
+        Serial.println(sample); //print to serial monitor
         
       }
     }else if (xbee.getResponse().isError()) {
@@ -58,13 +57,14 @@ void loop() {
        digitalWrite(led, LOW);
        delay(100);
        
-      Serial.println("Error reading packet.  Error code: ");  
+      Serial.println("Error reading packet.  Error code: ");   //serial monitor print error code
       Serial.println(xbee.getResponse().getErrorCode());
   } 
 
         
   delay(100);
   
+//Sending to gateway  
 if (xbee.getResponse().isAvailable()){
   
   XBeeAddress64 addr64 = XBeeAddress64(0x0013A200,0x40E95CCC); //SH and SL of the recieving xbee...something like this (0x0013A200, 0x40E95C53)
